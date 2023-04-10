@@ -1,0 +1,21 @@
+Connection of ADXL355 to µC pins
+
+color coding	function	uC pins		connector
+ribbon cable							pin
+red				CS			PA1			Pin 7
+blue			INT1		PA4			Pin 1
+ping			NC						Pin 8
+grey			MOSI		PA7			Pin 2
+yellow			INT2		PA2			Pin 9
+green			MISO		PA6			Pin 3	
+brown			DRDY		PA0			Pin 10
+white			SCLK		PA5			Pin 4	
+purple			0V			0V			Pin 11	
+black			0V			0V			Pin 5	
+red				3V3			3V3			Pin 12
+blue			3V3			3V3			Pin 6
+
+Additionally
+PC13	LED
+PA3		Trigger In
+PA8		Buzzer

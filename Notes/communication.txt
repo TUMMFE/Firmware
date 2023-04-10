@@ -1,0 +1,114 @@
+	
+MESSAGES FROM PC TO UC
+======================
+9-byte length with 8 byte payload and 1 command byte
+always MSB first
+
+Set Acoustic Stimulation Parameters
+0x10	SAMPLES[1]	SAMPLES[0]	FSTIM[1]	FSTIM[0]	BSTIM[1]	BSTIM[0]	DUR[1]		DUR[0]	
+		----------------------	--------------------	--------------------	------------------
+		|number of samples 		|						|						|
+		|MSB first				|						|						|
+								|frequency in mHz		|						|
+								|MSB first				|						|
+														|duration in s			|
+														|MSB first				|
+																				|duration of stimulus in ms	
+																				|MSB first
+
+Set Trigger Mode Parameters
+0x20	SAMPLES[1]	SAMPLES[0]	POL		dc		dc		dc		dc		dc
+		----------------------	---				
+		|number of samples 		|												
+		|MSB first				|												
+								|0x00 = rising edge							
+								|0x01 = falling edge								
+								|else= both edges		
+														
+																				
+ADXL355 Control
+0x30	HPF								LPF						RANGE				ACT_COUNT	dc	dc	dc	dc
+		---								---						-----				---------
+		|0x00 = off						|						|					|
+		|0x01 = 24.7 x 10^-4 x ODR		|						|					|
+		|0x02 = 6.2084 x 10^-4 x ODR	|						|					|
+		|0x03 = 1.5545 x 10^-4 x ODR	|						|					|
+		|0x04 = 0.3862 x 10^-4 x ODR	|						|					|
+		|0x05 = 0.0954 x 10^-4 x ODR	|						|					|
+		|0x06 = 0.02387 x 10^-4 x ODR	|						|					|
+										|0x00 = 4 kHz ODR		|					|
+										|0x01 = 2 kHz ODR		|					|
+										|0x02 = 1 kHz ODR		|					|
+										|0x03 = 500 Hz ODR		|					|
+										|0x04 = 250 Hz ODR		|					|
+										|0x05 = 125 Hz ODR		|					|
+										|0x06 = 62.5 Hz ODR		|					|
+										|0x07 = 31.25 Hz ODR	|					|
+										|0x07 = 15.625 Hz ODR	|					|
+										|0x09 = 7.813 Hz ODR	|					|
+										|0x0A = 3.906 Hz ODR	|					|
+																|0x01 = +/- 2g		|
+																|0x02 = +/- 4g		|
+																|0x03 = +/- 8g		|
+																					|activity counts
+																					|0 = deactivated
+																
+		
+
+ADXL355 Offset
+0x40	x[1]	x[0]	y[1]	y[0]	z[1]	z[0]	ACTTHR[1]	ACTTHR[0]
+		------------	------------	------------	---------------------				
+		|x-offset  		|				|				|
+		|2s compl.		|				|				|
+		|MSB first		|				|				|
+						|y-offset		|				|
+						|2s compl.		|				|
+						|MSB first		|				|		
+										|z-offset		|
+										|2s compl.		|
+										|MSB first		|
+														|Activity Threshold
+														|MSB first
+
+Set Mode/Start/Stop
+0x50	MODE[1]								SSPR	dc	dc	dc	dc	dc	dc	
+		-------								----
+		|0x00 = acoustic stimulation		|
+		|0x01 = external trigger, beep on	|
+		|0x02 = external trigger, beep off	|
+		|0x03 = free running mode			|
+											|0x00 = start
+											|0x01 = stop
+											|0x02 = pause
+											|0x03 = resume
+
+UC TO PC
+========
+always MSB first
+
+- raw data only (20 bytes per data set)
+ACK             EC      	MODE		STATE03			n[1]    n[0]	evt_id[1:0]	temp[1] temp[0]		x[3]	x[2]	x[1]	x[0]	y[3]	y[2]	y[1]	y[0]	z[3]	z[2]	z[1]	z[0]	 
+---             --      	------		----			------------	-----------	 --------------		-----------------------------    ----------------------------    ----------------------------   
+|0x06 = ACK     |           |			|				|				|			|					|								|								|								|
+|0x15 = NACK    |           |			|				|				|			|					|								|								|								|					
+                |errorcode  |			|				|				|			|					|								|								|								|
+							|			|				|				|			|					|								|								|								|
+							|MODE						|				|			|					|								|								|								|
+										|0x00 = start	|				|			|					|								|								|								|
+										|0x01 = stop	|				|			|					|								|								|								|
+										|0x02 = pause	|				|			|					|								|								|								|
+										|0x03 = resume	|				|			|					|								|								|								|	
+														|current sample	|			|					|								|								|								|
+														|MSB first		|			|					|								|								|								|
+																		|event id	|					|								|								|								|
+																		|MSB first	|					|								|								|								|
+																					|					|raw accel. data x-direction	|								|								|
+																					|					|MSB first						|								|								|
+																					|													|raw accel. data y-direction	|								|
+																					|													|MSB first						|								|
+																					|																					|raw accel. data z-direction	|
+																					|																					|MSB first						|
+																					|raw temperature data
+																					|MSB first
+in case of NACK - error code is following
+

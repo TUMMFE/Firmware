@@ -1,0 +1,53 @@
+
+ /*while (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesAcoustic) {
+            flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
+            if (flags == FLAG_EXTI_DRDY) {
+              SystemConfiguration.sample_counter++;
+              fifo_no = 3;
+              //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
+              error = adxl355_get_raw_temp(&temp);
+              error = adxl355_get_raw_xyz(&x, &y, &z);
+              data.error_code = error;     
+              data.sample_no = SystemConfiguration.sample_counter;
+              data.event_id = SystemConfiguration.event_counter;
+              data.state = SystemConfiguration.state;
+              data.mode = SystemConfiguration.mode;
+              data.raw_x = x;
+              data.raw_y = y;
+              data.raw_z = z;
+              data.raw_temp = temp;   
+              USBTransmitData(&data);
+            }
+          }
+        }
+        SystemConfiguration.sample_counter = 0;   */
+        /*
+      } else {
+        //2c. external trigger mode
+        flags = osThreadFlagsWait(FLAG_EXTI_TRIGGER_IN, osFlagsWaitAny, osWaitForever);
+        if (flags == FLAG_EXTI_TRIGGER_IN) {
+          SystemConfiguration.event_counter++;
+          if (SystemConfiguration.beep == true) {
+            SOUND_ReleaseStimulus();
+          }
+          while (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesTrigger) {
+            flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
+            if (flags == FLAG_EXTI_DRDY) {
+              SystemConfiguration.sample_counter++;
+              fifo_no = 1;
+              //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
+              error = adxl355_get_raw_temp(&temp);
+              error = adxl355_get_raw_xyz(&x, &y, &z);
+              data.error_code = error;     
+              data.sample_no = SystemConfiguration.sample_counter;
+              data.event_id = SystemConfiguration.event_counter;
+              data.state = SystemConfiguration.state;
+              data.mode = SystemConfiguration.mode;
+              data.raw_x = x;
+              data.raw_y = y;
+              data.raw_z = z;
+              data.raw_temp = temp;   
+              USBTransmitData(&data);
+            }
+          }
+        }*/

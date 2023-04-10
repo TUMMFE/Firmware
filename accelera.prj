@@ -1,0 +1,41 @@
+[Project ID]
+Signature=UE Proj: v.1
+Unicode=2
+[Project Information]
+Compilable=0
+Use Relative Directory=1
+Relative to Project File=1
+Include Sub Directories=1
+Project TagfileU=
+Project WordfileU=
+Project TpFileU=
+FilterU=
+Using VCS=0
+Save Account=0
+Create Tagfile=0
+CTags Legacy Support=0
+[uemakeXp]
+Compiler=Configs\ARM Compiler\Library
+ReleaseMode=0
+[Configs\ARM Compiler\Library]
+OutputDirectory_ReleaseMode=.
+OutputDirectory_DebugMode=.
+Target=accelera.lib
+Working Directory=.
+Command Line Arguments=accelera.lib
+Compiler Options=ARMCC -c -g -apcs /inter -cpu ARM940T
+Assembler Options=ARMASM -g -apcs /inter -cpu ARM940T
+Linker Options=ARMAR -r $O
+Libraries=
+Debugger=
+[Debug Settings]
+Program Arguments=
+Symbol Paths=
+Working Directory=
+Selected Debugger=0
+Source Paths=
+[Group FilterU]
+Main - .+AFw-Firmware F401+AFw-Source+AFw-=
+.+AFw-Source+AFw-=+ACo-.c+ADsAKg-.h
+[FilesU]
+0=.+AFw-Source+AFw-
