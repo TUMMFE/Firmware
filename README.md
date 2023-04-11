@@ -1,5 +1,14 @@
 # Firmware for Acceleration Sensor Project
-The Acceleration Sensor Project is a experimental setup used for muscle training and as readout for the experimental verification of the neuronal models for magnetic peripherial stimulation.
+The Acceleration Sensor Project which is used to measure the acceleration of the thumb after transcranial magnetic stimulation.
+
+## Literature
+The experiment is based on
+
+ [1] Walther et al, "Deafferentation of neighbouring motor cortex areas does not further enhance saturated practice-dependent plasticity in healthy adults", Clinical Neurophysiology 119 (2008) 886-891, [doi:10.1016/j.clinph.2007.12.006](https://www.sciencedirect.com/science/article/abs/pii/S1388245707009017)
+
+ [2] Delvendahl et al, "The time course of motor cortex plasticity after spaced motor practice", Brain Stimulation 4 (2011) 156-64, [doi:10.1016/j.brs.2010.10.002](https://www.brainstimjrnl.com/article/S1935-861X(10)00161-0/fulltext)
+
+ is a experimental setup used for muscle training and as readout for the experimental verification of the neuronal models for magnetic peripherial stimulation.
 
 The acceleration sensor will be placed on the thumb. The connection to the host is done using USB for data transmission and for power supply.
 
