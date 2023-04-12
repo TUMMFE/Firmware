@@ -36,8 +36,8 @@ typedef enum {
   EXTERNAL_TRIGGER_BEEP_ON,
   EXTERNAL_TRIGGER_BEEP_OFF,
   FREE_RUNNING_MODE,
-  GET_SAMPLE_MODE_NO_EXTI,
-  GET_SAMPLE_MODE_WITH_EXTI
+  SINGLE_SHOT_MODE_NO_EXTI,
+  SINGLE_SHOT_MODE_WITH_EXTI
 } SysConfig_Modes;
 
 typedef enum {
@@ -237,10 +237,10 @@ static void ChangeOperationMode(void) {
              break;
            case FREE_RUNNING_MODE:
              break;
-           case GET_SAMPLE_MODE_NO_EXTI:
+           case SINGLE_SHOT_MODE_NO_EXTI:
              SG_IO_IRQDetach(TRIGGER_IN_Pin);
              break;
-           case GET_SAMPLE_MODE_WITH_EXTI:
+           case SINGLE_SHOT_MODE_WITH_EXTI:
              SG_IO_IRQAttach(TRIGGER_IN_GPIO_Port, TRIGGER_IN_Pin, SystemConfiguration.trigger_pol);
              break;
            default:
@@ -264,7 +264,7 @@ static void ChangeState(void) {
               if (SystemConfiguration.mode == ACOUSTIC_STIMULATION_MODE) {
                 SOUND_Run();
               }
-              if (((SystemConfiguration.mode == GET_SAMPLE_MODE_NO_EXTI) || (SystemConfiguration.mode == GET_SAMPLE_MODE_WITH_EXTI)) && (SystemConfiguration.beep == true)) {                               
+              if (((SystemConfiguration.mode == SINGLE_SHOT_MODE_NO_EXTI) || (SystemConfiguration.mode == SINGLE_SHOT_MODE_WITH_EXTI)) && (SystemConfiguration.beep == true)) {                               
                 SOUND_ReleaseStimulus();
               }
               break;
@@ -295,7 +295,7 @@ static void ChangeState(void) {
               if (SystemConfiguration.mode == ACOUSTIC_STIMULATION_MODE) {
                 SOUND_Resume();
               }
-              if (((SystemConfiguration.mode == GET_SAMPLE_MODE_NO_EXTI) || (SystemConfiguration.mode == GET_SAMPLE_MODE_WITH_EXTI)) && (SystemConfiguration.beep == true)) {                               
+              if (((SystemConfiguration.mode == SINGLE_SHOT_MODE_NO_EXTI) || (SystemConfiguration.mode == SINGLE_SHOT_MODE_WITH_EXTI)) && (SystemConfiguration.beep == true)) {                               
                 SOUND_ReleaseStimulus();
               }
               break;
@@ -324,23 +324,18 @@ __NO_RETURN static void app_main(void *argument) {
   uint32_t z;
   uint16_t temp;
   uint8_t fifo_no;
-
   adxl355_error_t                   error;
   adxl355_device_t                  dev;
   adxl355_irq_mask_t                adxl_irq_flags;
   SystemData_TypeDef              data;
     
   /* on board LEDs */
-  SG_IO_Init(LED0_GPIO_Port, LED0_Pin, SG_IO_Output, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low);
-  
-   
+  SG_IO_Init(LED0_GPIO_Port, LED0_Pin, SG_IO_Output, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low); 
   /* chip select */
   SG_IO_Init(CS_GPIO_Port, CS_Pin, SG_IO_Output, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low);
-  SG_IO_SetPinHigh(CS_GPIO_Port, CS_Pin); 
-  
+  SG_IO_SetPinHigh(CS_GPIO_Port, CS_Pin);   
   //turn the LED on 
-  SG_IO_SetPinLow(LED0_GPIO_Port, LED0_Pin);
-  
+  SG_IO_SetPinLow(LED0_GPIO_Port, LED0_Pin); 
   SG_IO_Init(DRDY_IN_GPIO_Port, DRDY_Pin, SG_IO_Input, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low);
   SG_IO_Init(INT1_IN_GPIO_Port, INT1_Pin, SG_IO_Input, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low);
   SG_IO_Init(INT2_IN_GPIO_Port, INT2_Pin, SG_IO_Input, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low);
@@ -350,19 +345,15 @@ __NO_RETURN static void app_main(void *argument) {
   MX_USB_DEVICE_Init();		//init the USB device  
   
   //configuration of ADXL355
-  //SG_IO_SetPinLow(CS_GPIO_Port, CS_Pin);    //select the SPI slave device
   dev = SystemConfiguration.dev;
-  SystemConfiguration.error_code = adxl355_init(&dev);
-  
+  SystemConfiguration.error_code = adxl355_init(&dev);  
   adxl_irq_flags.fields.RDY_EN1 = 1;
   SystemConfiguration.error_code = adxl355_config_int_pins(adxl_irq_flags);
   SystemConfiguration.error_code = adxl355_set_irq_polarity(ADXL355_INT_ACTIVE_HIGH);
-  
   StandardConfiguration();
     
 	while (1) {	
-    //main programm loop
-    
+    //main programm loop  
     //1. check if some system state, system mode or system configuration has changed
     flags = osThreadFlagsWait(FLAG_SYSTEM_CONFIG_CHANGED, osFlagsNoClear, 0);
     if (flags == FLAG_SYSTEM_CONFIG_CHANGED) {
@@ -390,8 +381,7 @@ __NO_RETURN static void app_main(void *argument) {
           fifo_no = 3;
           //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
           error = adxl355_get_raw_temp(&temp);
-          error = adxl355_get_raw_xyz(&x, &y, &z);
-          
+          error = adxl355_get_raw_xyz(&x, &y, &z);       
           data.error_code = error;     
           data.sample_no = 1;
           data.event_id = 1;
@@ -433,11 +423,10 @@ __NO_RETURN static void app_main(void *argument) {
         }      
       } else if (SystemConfiguration.mode == EXTERNAL_TRIGGER_BEEP_ON) {
       } else if (SystemConfiguration.mode == EXTERNAL_TRIGGER_BEEP_OFF) {
-      } else if (SystemConfiguration.mode == GET_SAMPLE_MODE_WITH_EXTI) {
-      } else if (SystemConfiguration.mode == GET_SAMPLE_MODE_NO_EXTI) {         
+      } else if (SystemConfiguration.mode == SINGLE_SHOT_MODE_WITH_EXTI) {
+      } else if (SystemConfiguration.mode == SINGLE_SHOT_MODE_NO_EXTI) {         
           flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
-          if ((flags == FLAG_EXTI_DRDY) && (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesFreeMode)) {  
-            
+          if ((flags == FLAG_EXTI_DRDY) && (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesFreeMode)) {              
             fifo_no = 3;
             //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
             error = adxl355_get_raw_temp(&temp);
@@ -456,7 +445,7 @@ __NO_RETURN static void app_main(void *argument) {
           } else if (SystemConfiguration.sample_counter == SystemConfiguration.numberOfSamplesFreeMode) {
             SystemConfiguration.event_counter++;  
             SystemConfiguration.sample_counter = 0; 
-            SystemConfiguration.mode = PAUSE;
+            SystemConfiguration.mode = (uint8_t) PAUSE;
             SystemConfiguration.mode_changed = true; 
             ChangeOperationMode();
           }
@@ -471,22 +460,16 @@ __NO_RETURN static void app_main(void *argument) {
  * Main function: Application Entry Point
  */
 int main(void) {
-  HAL_Init();             //Init HAL
-	
+  HAL_Init();             //Init HAL	
   if (SG_RCC_Init() != SG_RCC_Ok) {
     Error_Handler();
   }
   SystemCoreClockUpdate();
-  
-		
 	osKernelInitialize();   //Start RTX Kernel
-  
-  
 	main_id = osThreadNew(app_main, NULL, &app_main_attr); // Create application main thread
   if (main_id == NULL) {
     Error_Handler();
-  }
-  
+  } 
 	osKernelStart();        //Start OS scheduler
 } // END OF 'main'
 
@@ -559,9 +542,9 @@ void CDC_Receive_FS_Callback(uint8_t* Buf, uint32_t *Len) {
         case COM_CMD_GET_SAMPLES:          
           SystemConfiguration.numberOfSamplesFreeMode = (Buf[1] << 8) | (Buf[2] << 0);
           if (Buf[4] == 0x00) {
-            SystemConfiguration.mode = GET_SAMPLE_MODE_NO_EXTI;
+            SystemConfiguration.mode = SINGLE_SHOT_MODE_NO_EXTI;
           } else {
-            SystemConfiguration.mode = GET_SAMPLE_MODE_WITH_EXTI;
+            SystemConfiguration.mode = SINGLE_SHOT_MODE_WITH_EXTI;
           }
           if (Buf[3] == 0x00) {
             SystemConfiguration.beep = false; 

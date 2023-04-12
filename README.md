@@ -79,10 +79,10 @@ PA8|PWM output |alternate function
 ### Bugs & Not Implemented Yet
 
 ## Firmware
-### Status
-
-
 ### Features
+- USB CDC Device
+- four different operation modes automatic acoustic stimulation mode, free running mode, external trigger mode and single shot mode with and without external trigger capability.
+
 ### Prerequisites & How To Compile
 
 *Prerequisites*
@@ -96,8 +96,6 @@ PA8|PWM output |alternate function
 
 ### Software Architecture
 #### Description
-
-#### Modules
 ##### Main
 The files are located in the **Source** directory.
 
@@ -109,27 +107,78 @@ File         |Content
 |sound       |control of the buzzer
 |adxl355     |interface tp ADXL355 sensor
 
-
 ###### bsp.h
-- Contains some macros to do some simple bit operations.
+- contains some macros to do some simple bit operations.
 - defines the used microcontroller family
 - defines the used microcontroller type
 - defines the HSE clock value in Hz
 - defines the event flags
-	+ FLAG_EXTI_DRDY: This flag is set by the external data ready interrupt to signal that new data is available at the sensor
-	+ FLAG_EXTI_TRIGGER_IN: This flag is set by the external trigger input interrupt to signal that a new data aquisition must be started
-	+ FLAG_SYSTEM_CONFIG_CHANGED: This flag is set by the USB Rx thread when a configuration, state or mode change is requested by the USB host
-	+ FLAG_START_DAQ: This flag is set by the sound system in automatic acoustic stimulation mode at each time, when a beep is started. This is used to signal the main thread that now data will be available soon.
+	+ **FLAG_EXTI_DRDY:** This flag is set by the external data ready interrupt to signal that new data is available at the sensor
+	+ **FLAG_EXTI_TRIGGER_IN:** This flag is set by the external trigger input interrupt to signal that a new data aquisition must be started
+	+ **FLAG_SYSTEM_CONFIG_CHANGED:** This flag is set by the USB Rx thread when a configuration, state or mode change is requested by the USB host
+	+ **FLAG_START_DAQ:** This flag is set by the sound system in automatic acoustic stimulation mode at each time, when a beep is started. This is used to signal the main thread that now data will be available soon.
 - defines the communication protocol like the used Rx/Tx data frame length (in bytes), the command bytes and some min/max values to verfify data coming from the USB host 
 - Ports and Pins for GPIO outputs and inputs, the SPI interface, the TIMER for the buzzer but not the pins for the USB interface.
 
 ###### main.c/main.h
+- contains the main program entry point *int main(void)* which
+	+ configures the clock of the microcontroller
+	+ generates the main threas *app_main* and
+	+ starts the RTOS scheduler
+- contains the USB receive callback function *CDC_Receive_FS_Callback()* which
+	+ is executed when some data from the USB host was received
+	+ reads the data from the input FIFO
+	+ decodes the data
+	+ stores data in the *SystemConfiguration* struct
+- contains the *HAL_GetTick* function which is used for the RTOS SysTick timer together with the global variable *os_time* which is declared in *main.c* but defined in the RTOS system
+- contains the *Error_Handler* function which
+	+ is called on every configuration error/system error
+	+ disables are interrupts
+	+ resets the microcontroller using *NVIC_SystemReset*
+- contains some private functions
+	+ *StandardConfiguration()*
+		* sets the basic configuration which is sensor in standby,  output data rate 1000 Hz, no highpass filter, range +/- 8g, no offset
+		* inits the sound.c
+	+ *ChangeConfiguration()* which writes the configuration to the sensor 		
+	+ *USBTransmitData()* generates the byte stream from the data and transmit it via USB
+	+ *ChangeOperationMode()* attaches and detaches the external interrupt lines, dempending on the operation mode which can be the automatic acoustic stimulation mode, the external trigger mode, the single shot mode or the free running mode
+		* **START:** set the sample counter and the event counter to 0, start the measurement, attach der data ready interrupt and in case of automatic acoustic stimulation start the sound protocol.
+		* **STOP:** detach the data ready interrupt, resets the sample and event counter and in case of the automatic acousting mode stops the sound generation
+		* **PAUSE:** detach the data ready interrupt and in case of automatic acousting stimulation mode pauses the sound generation. No counters will be resetted.
+		* **RESUME:** attaches the data ready interrupt again and in case of automatic acousting stimulation mode resumes the sound generation. No counters will be resetted.
+	+ *ChangeState* starts, pauses, resumes or stops the 
+- contains the main thread *app_main()* which
+	+ configures the GPIO pins (not the alternate function pins)
+	+ calls the *StandardConfiguration()* function
+	+ configures the interrupt pins of the ADXL355
+	+ has a endless loop in which
+		* checks if a **FLAG_SYSTEM_CONFIG_CHANGED** was set, in case this flag was set call either *ChangeConfiguration()*, *ChangeState* or *ChangeOperationMode()* depending on the nature of configuration request
+		* checks the current operation mode
+			- in automatic acoustic stimulation mode, wait for **FLAG_START_DAQ** and than wait for data ready flag **FLAG_EXTI_DRDY** collect the data and transmit the data via USB. Do this until the number of requested samples per stimulus is reached or a stop or pause request was received
+			- in free running mode wait for **FLAG_EXTI_DRDY** collect the data and transmit the data via USB. Do this as long as no stop request was received.
+			- in external trigger mode: not implemented yet
+			- in single shot mode wait for **FLAG_EXTI_DRDY** collect the data and transmit the data via USB. Do this until the number of requested samples per stimulus is reached or a stop or pause request was received. The difference to the automatic mode is, that in this mode the execution will **not** wait for a **FLAG_START_DAQ**			
 
 ###### stm32f4xx_it.c/stm32f4xx_it.h
+- contains the decleration of the global USB handle *hpcd_USB_OTG_FS*
+- contains the global IRQ handler for the EXTI (the one from the SGLib is used) which set the event flags defined in *bsp.h* dependant on the GPIO pin
+- contains the interrupt handler for the USB connection *OTG_FS_IRQHandler* which in turn will call the *CDC_Receive_FS_Callback()* function at the far end
+- NMI interrupt handler
+- Hard fault interrupt handler
 
 ###### sound.c/sound.h
+- contains some functions to generate an acoustic stimulation pattern using two software timers
+	+ *stimulus timer* which starts the PWM which generates the PWM when started and stops the PWM on each tick. This timer is used to limit the duration of one acoustic stimulus
+	+ *block timer* which controls the pause between two adjacent acoustic stimuli
+- contains the GPIO and timer configuration for the buzzer
+- the timer is set to PWM mode with a frequency of 4 kHz with a duty cycle of 50%
 
 ###### adxl355.c/adxl355.h
+- contains a driver for the ADXL355 accelerometer sensor
+- configuration of the SPI interface (SPI interface is used in interrupt mode)
+- interrupt handler for the SPI interface (general SPI IRQ handler, transfer complete handler, receive complete handler and error handler)
+- functions to write to and read data from the sensor
+- function to configure the sensor
 
 ##### USB Device
 The files are located in the **Middleware** directory.
@@ -188,8 +237,9 @@ Contains the HAL Library from STM.
 ##### µC to Host
 
 ### Bugs & Not Implemented Yet
-- external trigger mode is not implemented yet.
--
+- external trigger modes are not implemented yet.
+- seperate ADXL355 driver from underlying hardware (SPI)
+- seperate tasks and thread in the main.c file
 
 ## PC Software
 ### Status

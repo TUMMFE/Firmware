@@ -102,9 +102,7 @@ extern void SOUND_Init(void) {
   if (HAL_TIM_PWM_Init(&htim1) != HAL_OK) {
     Error_Handler();
   }
-  
-  
-  
+
   /* Common configuration for all channels */
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = (uint16_t) BUZZER_TIMER_PULSE; 
@@ -117,9 +115,6 @@ extern void SOUND_Init(void) {
   {
     Error_Handler();
   }
-    
-	
-
   
   //Configuration of GPIO Pin
   SG_IO_InitAlternate(BUZZER_GPIO_Port, BUZZER_Pin, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_High, BUZZER_ALTERNATE_FUNCTION);
