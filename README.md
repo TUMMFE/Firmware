@@ -80,14 +80,116 @@ PA8|PWM output |alternate function
 
 ## Firmware
 ### Status
+
+
 ### Features
 ### Prerequisites & How To Compile
+
+*Prerequisites*
+- Keil MDK-ARM Professional, Version 5.38a
+- Keil RTOS, RTX2
+
+*How To Compile*
+- ARM Compiler Version 6
+- C99 
+
+
 ### Software Architecture
+#### Description
+
+#### Modules
+##### Main
+The files are located in the **Source** directory.
+
+File         |Content
+-------------|-----------------------
+|bsp.h       |board supply package
+|main        |main programm entry
+|stm32f4xx_it|interrupt handling
+|sound       |control of the buzzer
+|adxl355     |interface tp ADXL355 sensor
+
+
+###### bsp.h
+- Contains some macros to do some simple bit operations.
+- defines the used microcontroller family
+- defines the used microcontroller type
+- defines the HSE clock value in Hz
+- defines the event flags
+	+ FLAG_EXTI_DRDY: This flag is set by the external data ready interrupt to signal that new data is available at the sensor
+	+ FLAG_EXTI_TRIGGER_IN: This flag is set by the external trigger input interrupt to signal that a new data aquisition must be started
+	+ FLAG_SYSTEM_CONFIG_CHANGED: This flag is set by the USB Rx thread when a configuration, state or mode change is requested by the USB host
+	+ FLAG_START_DAQ: This flag is set by the sound system in automatic acoustic stimulation mode at each time, when a beep is started. This is used to signal the main thread that now data will be available soon.
+- defines the communication protocol like the used Rx/Tx data frame length (in bytes), the command bytes and some min/max values to verfify data coming from the USB host 
+- Ports and Pins for GPIO outputs and inputs, the SPI interface, the TIMER for the buzzer but not the pins for the USB interface.
+
+###### main.c/main.h
+
+###### stm32f4xx_it.c/stm32f4xx_it.h
+
+###### sound.c/sound.h
+
+###### adxl355.c/adxl355.h
+
+##### USB Device
+The files are located in the **Middleware** directory.
+The files contains the USB drivers from STM.
+
+File        |Content
+------------|-----------------------
+|usbd_conf  |GPIO configuration of USB peripherial
+|usbd_device|USB Device implementation
+|usbd_cdc_if|USB VCP (CDC) implementation - *CDC_Receive_FS()* changed to call user *CDC_Receive_FS_Callback()* function (in main.c)
+|usbd_desc  |USB Device Descriptors - PID/VID/Manufacturer info
+
+##### Middleware
+The files are located in the **Middleware** directory.
+The files contains the USB drivers from STM as well as a library for a lightweight ring buffer.
+
+File        |Content
+------------|-----------------------
+|lwrb       |Lightweight ring buffer
+|usbd_cdc   |USB CDC Device class
+|usbd_core  |USB Core
+|usbd_ctlreq|USB Control Requests
+|usbd_ioreq |USB IO Endpoints
+
+##### SG Lib
+The files are located in the **SGLib** directory.
+Contains library function for GPIO, RCC and I2C. These files can be used for the following microcontrollers:
+- STM32F0xx
+- STM32F401xx
+- STM32F405xx
+- STM32F407xx
+- STM32F410Cx
+- STM32F410Rx
+- STM32F410Tx
+- STM32F415xx
+- STM32F417xx
+- STM32F427xx
+- STM32F429xx
+- STM32F437xx
+- STM32F439xx
+- STM32F446xx
+- STM32F469xx
+- STM32F479xx
+- STM32F7xx
+
+These functions can be used generally. There is a own GIT project for this library.
+
+##### CMSIS
+Keil RTX Configuration files. In **RTX_Config.h** the RTOS can be configured.
+There are no special changes for this project beside the standard settings.
+ 
+##### Device
+Contains the HAL Library from STM.
 #### Communication Protocol
 ##### Host to µC
 ##### µC to Host
 
 ### Bugs & Not Implemented Yet
+- external trigger mode is not implemented yet.
+-
 
 ## PC Software
 ### Status

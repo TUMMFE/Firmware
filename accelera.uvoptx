@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>5</nTsel>
+        <nTsel>6</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -199,7 +199,7 @@
         </Ww>
       </WatchWindow2>
       <ScvdPack>
-        <Filename>C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.9.0\CMSIS\RTOS2\RTX\RTX5.scvd</Filename>
+        <Filename>C:\Users\berng\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\RTOS2\RTX\RTX5.scvd</Filename>
         <Type>ARM.CMSIS.5.9.0</Type>
         <SubType>1</SubType>
       </ScvdPack>
@@ -335,7 +335,7 @@
 
   <Group>
     <GroupName>USB Device</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -367,7 +367,7 @@
       <GroupNumber>2</GroupNumber>
       <FileNumber>7</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\USB_DEVICE\App\usbd_cdc_if.c</PathWithFileName>
@@ -467,7 +467,7 @@
       <GroupNumber>4</GroupNumber>
       <FileNumber>14</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\SGLib\src\sg_io.c</PathWithFileName>
@@ -499,7 +499,7 @@
 
   <Group>
     <GroupName>::Device</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>1</RteFlg>

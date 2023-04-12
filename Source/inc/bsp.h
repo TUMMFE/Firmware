@@ -59,33 +59,9 @@
  * @{
  */
 
-/**
- * @brief   Calculate lower 8-bit of a uint16_t value
- * @param[in]   x:  uin16_t byte value
- * @return lower byte
- */  
-#define MISC_LOWBYTE(x)                  ( (uint8_t)(x)  )
-
-/**
- * @brief   Calculate higher 8-bit of a uint16_t value
- * @param[in]   x:  uin16_t byte value
- * @return high byte
- */  
-#define MISC_HIGHBYTE(x)                 ( (uint8_t)(((uint16_t)(x)) >> 8) ) 
-
-
-#define MISC_COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
-
 
 #define MISC_BIT(x)	                    (1 << (x))
-#define MISC_ARRAY_SIZE(x) \ (sizeof(x) / sizeof((x)[0]))
-
-#define MISC_DIV_ROUND_UP(x,y) \ (((x) + (y) - 1) / (y))
-#define MISC_DIV_ROUND_CLOSEST(x, y) \ (((x) + (y) / 2) / (y))
-#define MISC_DIV_ROUND_CLOSEST_ULL(x, y) \	MISC_DIV_ROUND_CLOSEST(x, y)
-
 #define MISC_BITS_PER_LONG              32
-
 #define MISC_GENMASK(h, l) ({ 					\
 		uint32_t t = (uint32_t)(~0UL);			\
 		t = t << (MISC_BITS_PER_LONG - (h - l + 1));		\
@@ -109,79 +85,11 @@
  * @{
  */
 
-
-/******************************************************************************/
-/*  			                      GPIO Macros                                   */ 
-/******************************************************************************/
-/**
- * @brief  Sets pin(s) low
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to set pin low
- * @param  pin: Select GPIO pin(s). You can select more pins with | (OR) operator to set them low
- * @retval None
- */
-#define IO_SetPinLow(GPIOx, pin)			((GPIOx)->BSRR = (uint32_t)(((uint32_t)pin) << 16))
-
-/**
- * @brief  Sets pin(s) high
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to set pin high
- * @param  pin: Select GPIO pin(s). You can select more pins with | (OR) operator to set them high
- * @retval None
- */
-#define IO_SetPinHigh(GPIOx, pin)			((GPIOx)->BSRR = (uint32_t)(pin))
-
-/**
- * @brief  Sets pin(s) value
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to set pin value
- * @param  pin: Select GPIO pin(s). You can select more pins with | (OR) operator to set them value
- * @param  val: If parameter is 0 then pin will be low, otherwise high
- * @retval None
- */
-#define IO_SetPinValue(GPIOx, pin, val)	((val) ? IO_SetPinHigh(GPIOx, pin) : IO_SetPinLow(GPIOx, pin))
-
-/**
- * @brief  Toggles pin(s)
- * Defined as macro to get maximum speed using register access.
- * With this instruction a interrupt which occurs between 
- * reading ODR and setting BSSR cannot affect the toggle 
- * function. BitSet has a higher priority than BitReset
- * (look at e.g. rm0008.pdf, page 168). 
- * The instruction GPIOA->ODR ^= GPIO_PIN_0 will not be IRQ safe (but might be faster)
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to toggle pin value
- * @param  pin: Select GPIO pin(s). You can select more pins with | (OR) operator to toggle them all at a time
- * @retval None
- */
-#define IO_PinToggle(GPIOx, pin)    ((GPIOx)->BSRR = (((GPIOx)->ODR ^ (uint32_t)(pin)) & (uint32_t)(pin))|(((uint32_t)(pin)) << 16));
-
-/**
- * @brief  Gets input data bit
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to read input bit value
- * @param  pin: GPIO pin where you want to read value
- * @retval 1 in case pin is high, or 0 if low
- */
-#define IO_GetInputPinValue(GPIOx, pin)	(((GPIOx)->IDR & (pin)) == 0 ? 0 : 1)
-
-/**
- * @brief  Gets output data bit
- * @note   Defined as macro to get maximum speed using register access
- * @param  GPIOx: GPIOx PORT where you want to read output bit value
- * @param  pin: GPIO pin where you want to read value
- * @retval 1 in case pin is high, or 0 if low
- */
-#define IO_GetOutputPinValue(GPIOx, pin)	(((GPIOx)->ODR & (pin)) == 0 ? 0 : 1)
-
-
 /******************************************************************************/
 /*      			                  UC family                                     */ 
 /******************************************************************************/
 #define STM32F4xx                       STM32F4xx
 #define STM32F401xx                     1
-#define USE_HAL_DRIVER                  USE_HAL_DRIVER
-
 #define HSE_VALUE                       25000000
 
 /******************************************************************************/
