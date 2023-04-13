@@ -64,6 +64,7 @@ typedef struct {
   bool state_changed;
   bool beep;
   bool isRunning;
+  bool waitForExtTriggerIn;
 } SystemConfig_TypeDef;
 
 typedef struct {
@@ -101,6 +102,7 @@ static void StandardConfiguration(void);
 static void ChangeConfiguration(void);
 static void ChangeOperationMode(void);
 static void ChangeState(void);
+static void GetDataForTransmission(SystemData_TypeDef *data);
 static void USBTransmitData(SystemData_TypeDef *data);
 
 
@@ -180,6 +182,29 @@ static void ChangeConfiguration(void) {
   }
 } // END OF 'ChangeConfiguration'	
 
+static void GetDataForTransmission(SystemData_TypeDef *data) {
+  uint32_t x;
+  uint32_t y;
+  uint32_t z;
+  uint16_t temp;
+  uint8_t fifo_no;
+  adxl355_error_t    error;
+  adxl355_device_t   dev;
+  
+  fifo_no = 3;
+  //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
+  error = adxl355_get_raw_temp(&temp);
+  error = adxl355_get_raw_xyz(&x, &y, &z);
+  data->error_code = error;     
+  data->sample_no = SystemConfiguration.sample_counter;
+  data->event_id = SystemConfiguration.event_counter;
+  data->state = SystemConfiguration.state;
+  data->mode = SystemConfiguration.mode;
+  data->raw_x = x;
+  data->raw_y = y;
+  data->raw_z = z;
+  data->raw_temp = temp;   
+} // END OF 'GetDataForTransmission'	
 static void USBTransmitData(SystemData_TypeDef *data) {
   uint8_t USB_TxBuffer[COM_TX_LENGTH] = {0};
   
@@ -215,9 +240,7 @@ static void USBTransmitData(SystemData_TypeDef *data) {
   USB_TxBuffer[19] = (uint8_t) (data->raw_z >> 16);
   USB_TxBuffer[20] = (uint8_t) (data->raw_z >> 8);
   USB_TxBuffer[21] = (uint8_t) (data->raw_z);
-        
-  
-     
+             
   CDC_Transmit_FS(USB_TxBuffer, COM_TX_LENGTH);    
 } // END OF 'USBTransmitData'
   
@@ -319,15 +342,9 @@ __NO_RETURN static void app_main(void *argument) {
   (void)argument;
   uint8_t USB_TxBuffer[COM_TX_LENGTH] = {0};
   uint32_t flags; 
-  uint32_t x;
-  uint32_t y;
-  uint32_t z;
-  uint16_t temp;
-  uint8_t fifo_no;
-  adxl355_error_t                   error;
-  adxl355_device_t                  dev;
-  adxl355_irq_mask_t                adxl_irq_flags;
-  SystemData_TypeDef              data;
+  adxl355_device_t dev;
+  adxl355_irq_mask_t adxl_irq_flags;
+  SystemData_TypeDef data;
     
   /* on board LEDs */
   SG_IO_Init(LED0_GPIO_Port, LED0_Pin, SG_IO_Output, SG_IO_PushPull, SG_IO_NoPullUpOrDown, SG_IO_Low); 
@@ -378,19 +395,10 @@ __NO_RETURN static void app_main(void *argument) {
         ////no need to wait for some signals from other threads, just react on DRDY
         flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
         if (flags == FLAG_EXTI_DRDY) {
-          fifo_no = 3;
-          //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
-          error = adxl355_get_raw_temp(&temp);
-          error = adxl355_get_raw_xyz(&x, &y, &z);       
-          data.error_code = error;     
-          data.sample_no = 1;
-          data.event_id = 1;
-          data.state = SystemConfiguration.state;
-          data.mode = SystemConfiguration.mode;
-          data.raw_x = x;
-          data.raw_y = y;
-          data.raw_z = z;
-          data.raw_temp = temp;   
+          //in free running mode, there is no sample and event counter, thus they are set to 0
+          SystemConfiguration.sample_counter = 0;
+          SystemConfiguration.event_counter = 0;   
+          GetDataForTransmission(&data);
           USBTransmitData(&data);  
         }
       } else if (SystemConfiguration.mode == ACOUSTIC_STIMULATION_MODE) {
@@ -399,19 +407,7 @@ __NO_RETURN static void app_main(void *argument) {
         if (flags == FLAG_START_DAQ) {           
           flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
           if ((flags == FLAG_EXTI_DRDY) && (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesAcoustic)) {                       
-            fifo_no = 3;
-            //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
-            error = adxl355_get_raw_temp(&temp);
-            error = adxl355_get_raw_xyz(&x, &y, &z);
-            data.error_code = error;     
-            data.sample_no = SystemConfiguration.sample_counter;
-            data.event_id = SystemConfiguration.event_counter;
-            data.state = SystemConfiguration.state;
-            data.mode = SystemConfiguration.mode;
-            data.raw_x = x;
-            data.raw_y = y;
-            data.raw_z = z;
-            data.raw_temp = temp;   
+            GetDataForTransmission(&data);
             USBTransmitData(&data);
             SystemConfiguration.sample_counter++;
             osEventFlagsClear(evt_id, FLAG_EXTI_DRDY);
@@ -422,24 +418,28 @@ __NO_RETURN static void app_main(void *argument) {
           }
         }      
       } else if (SystemConfiguration.mode == EXTERNAL_TRIGGER_BEEP_ON) {
+        //free running mode with external start trigger and beep
       } else if (SystemConfiguration.mode == EXTERNAL_TRIGGER_BEEP_OFF) {
+        //free running mode with external start trigger and no beep     
       } else if (SystemConfiguration.mode == SINGLE_SHOT_MODE_WITH_EXTI) {
+        flags = osEventFlagsWait(evt_id, FLAG_EXTI_TRIGGER_IN|FLAG_EXTI_DRDY, osFlagsNoClear, 0);
+        if (flags == FLAG_EXTI_TRIGGER_IN) {           
+          flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
+          if ((flags == FLAG_EXTI_DRDY) && (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesAcoustic)) {                       
+            GetDataForTransmission(&data);
+            USBTransmitData(&data);
+            SystemConfiguration.sample_counter++;
+            osEventFlagsClear(evt_id, FLAG_EXTI_DRDY);
+          } else if (SystemConfiguration.sample_counter == SystemConfiguration.numberOfSamplesAcoustic) {
+            SystemConfiguration.event_counter++;  
+            SystemConfiguration.sample_counter = 0;   
+            osEventFlagsClear(evt_id, FLAG_START_DAQ);
+          }
+        }             
       } else if (SystemConfiguration.mode == SINGLE_SHOT_MODE_NO_EXTI) {         
           flags = osThreadFlagsWait(FLAG_EXTI_DRDY, osFlagsWaitAny, osWaitForever);
           if ((flags == FLAG_EXTI_DRDY) && (SystemConfiguration.sample_counter < SystemConfiguration.numberOfSamplesFreeMode)) {              
-            fifo_no = 3;
-            //error = adxl355_get_raw_fifo_data(&fifo_no, &x, &y, &z);
-            error = adxl355_get_raw_temp(&temp);
-            error = adxl355_get_raw_xyz(&x, &y, &z);
-            data.error_code = error;     
-            data.sample_no = SystemConfiguration.sample_counter;
-            data.event_id = SystemConfiguration.event_counter;
-            data.state = SystemConfiguration.state;
-            data.mode = SystemConfiguration.mode;
-            data.raw_x = x;
-            data.raw_y = y;
-            data.raw_z = z;
-            data.raw_temp = temp;   
+            GetDataForTransmission(&data);
             USBTransmitData(&data);
             SystemConfiguration.sample_counter++;
           } else if (SystemConfiguration.sample_counter == SystemConfiguration.numberOfSamplesFreeMode) {
@@ -543,8 +543,10 @@ void CDC_Receive_FS_Callback(uint8_t* Buf, uint32_t *Len) {
           SystemConfiguration.numberOfSamplesFreeMode = (Buf[1] << 8) | (Buf[2] << 0);
           if (Buf[4] == 0x00) {
             SystemConfiguration.mode = SINGLE_SHOT_MODE_NO_EXTI;
+            SystemConfiguration.waitForExtTriggerIn = false;
           } else {
             SystemConfiguration.mode = SINGLE_SHOT_MODE_WITH_EXTI;
+            SystemConfiguration.waitForExtTriggerIn = false;
           }
           if (Buf[3] == 0x00) {
             SystemConfiguration.beep = false; 
