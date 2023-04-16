@@ -242,11 +242,8 @@ Contains the HAL Library from STM.
 - seperate tasks and thread in the main.c file
 
 ## PC Software
-### Status
-### Features
-### Prerequisites & How To Compile
-### Software Architecture
-### Bugs & Not Implemented Yet
+own GIT project.
+
 ## Experiments
 Subjects practice fastest possible thumb flexion movements by performing brief contractions of their left flexor pollicis brevis (FPB) muscle. Movements are externally paced by an acoustic stimulus at a certain frequency. Acoustic stimulus will be applied for several minutes, followed by a pause of again severel minutes. This blocks will be repeated several times.
 
