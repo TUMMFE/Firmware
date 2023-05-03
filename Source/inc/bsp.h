@@ -90,7 +90,7 @@
 /******************************************************************************/
 #define STM32F4xx                       STM32F4xx
 #define STM32F401xx                     1
-#define HSE_VALUE                       25000000
+#define HSE_VALUE                       8000000
 
 /******************************************************************************/
 /*      			                 TASK Comm                                      */ 
@@ -105,7 +105,7 @@
 /*  			                  CLOCK configuration                               */ 
 /******************************************************************************/
 #define RCC_OSCILLATORTYPE              RCC_OSCILLATORTYPE_HSE
-#define RCC_PLLM                        25
+#define RCC_PLLM                        8
 #define RCC_PLLN                        336
 #define RCC_PLLP                        4
 #define RCC_PLLQ                        7           
@@ -144,28 +144,28 @@
 /******************************************************************************/
 /*  			          PORTS and PINS for digital outputs                        */ 
 /******************************************************************************/
-#define CS_Pin 																GPIO_PIN_4
+#define CS_Pin 																GPIO_PIN_1
 #define CS_GPIO_Port													GPIOA
 
-#define LED0_Pin 															GPIO_PIN_13
-#define LED0_GPIO_Port												GPIOC
+#define LED0_Pin 															GPIO_PIN_9
+#define LED0_GPIO_Port												GPIOA
 
 
 /******************************************************************************/
 /*  			          PORTS and PINS for digital inputs                         */ 
 /******************************************************************************/
-#define	TRIGGER_IN_Pin 							  				GPIO_PIN_3
-#define TRIGGER_IN_GPIO_Port					  			GPIOA
-#define TRIGGER_IN_EXTI_Line                  EXTI3_IRQn
+#define	TRIGGER_IN_Pin 							  				GPIO_PIN_12
+#define TRIGGER_IN_GPIO_Port					  			GPIOB
+#define TRIGGER_IN_EXTI_Line                  EXTI12_IRQn
 
 #define	DRDY_Pin 							  							GPIO_PIN_0
 #define DRDY_IN_GPIO_Port					  					GPIOA
 #define DRDY_IN_EXTI_Line                     EXTI0_IRQn
 
 
-#define	INT1_Pin 							  							GPIO_PIN_1
+#define	INT1_Pin 							  							GPIO_PIN_4
 #define INT1_IN_GPIO_Port					  					GPIOA
-#define INT1_EXTI_Line                        EXTI1_IRQn
+#define INT1_EXTI_Line                        EXTI4_IRQn
 
 #define	INT2_Pin 							  							GPIO_PIN_2
 #define INT2_IN_GPIO_Port					  					GPIOA
